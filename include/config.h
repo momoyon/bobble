@@ -15,7 +15,10 @@ extern float g_delta;
 
 extern Rectangle g_play_bounds;
 
+extern bool g_debug;
+
 #define TARGET_FPS 60
-#define BOB_DEFAULT_SPEED 200.f
+#define BOB_DEFAULT_SPEED 500.f
+#define BOB_DEFAULT_RADIUS 32.f
 
 #endif // !CONFIG_H_
