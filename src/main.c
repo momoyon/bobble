@@ -25,12 +25,20 @@ int main(void) {
       w - (32.f * 2),
       h - (32.f * 2),
   };
+  g_font = GetFontDefault();
 
   Bob bob = make_bob(v2(w / 2.f, g_play_bounds.y + g_play_bounds.height - BOB_DEFAULT_RADIUS), KEY_LEFT, KEY_RIGHT, KEY_SPACE);
 
+  /// DEBUG UI
+  UI ui = UI_make(get_default_ui_theme(), &g_font, v2xx(0), "DEBUG", &g_mpos);
+
   while (!WindowShouldClose()) {
     g_delta = GetFrameTime();
+    g_mpos = get_mpos_scaled();
     begin_frame();
+
+    /// UI
+    UI_begin(&ui, UI_LAYOUT_KIND_VERT);
 
     /// Input
     if (IsKeyDown(KEY_LEFT_CONTROL) && IsKeyPressed(KEY_F)) {
@@ -46,11 +54,15 @@ int main(void) {
 
     if (g_debug) {
       DrawRectangleLinesEx(g_play_bounds, 1.f, WHITE);
+      UI_draw(&ui);
     }
+
+    UI_end(&ui);
 
     end_frame();
   }
 
+  UI_free(&ui);
   close_window();
 
   return 0;
