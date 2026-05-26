@@ -6,7 +6,6 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
-#include <ctype.h>
 #include <assert.h>
 #include <limits.h>
 
@@ -523,6 +522,7 @@ bool c_str_ends_with(const char* str, const char* preffix);
 #include <stdlib.h>
 #include <assert.h>
 #include <math.h>
+#include <ctype.h>
 
 // My things implementation:
 
@@ -603,10 +603,12 @@ void c_os_get_timedate(c_Arena* a) {
 }
 
 bool c_os_file_exists(cstr filename) {
+    (void)filename;
     return false;
 }
 
 c_String_array c_os_list_files(cstr dir) {
+    (void)dir;
     c_String_array res = {0};
     C_ASSERT(false, "UNIMPLEMENTED!");
     return res;

@@ -91,8 +91,10 @@ int main(int argc, char **argv) {
     cmd_append(&cmd, "-I"TOOLS_PATH);
     lib_paths(&cmd);
     libs(&cmd);
+
     if (!cmd_run(&cmd)) return 1;
 
+    nob_log(INFO, "Building Binary%s...", debug ? "(Debug)" : "");
     const char *binary = debug ? BINARY_NAME"-debug" : BINARY_NAME;
 
     // NOTE: Collect source files

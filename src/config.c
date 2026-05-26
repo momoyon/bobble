@@ -9,6 +9,7 @@ int g_window_height = 0;
 
 float g_screen_scale = 1.f;
 
+Asset_manager g_asset_manager = {0};
 float g_delta = 0.f;
 Vector2 g_mpos = {0};
 

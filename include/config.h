@@ -12,6 +12,7 @@ extern int g_window_height;
 
 extern float g_screen_scale;
 
+extern Asset_manager g_asset_manager;
 extern float g_delta;
 extern Vector2 g_mpos;
 
