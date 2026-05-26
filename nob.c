@@ -5,6 +5,7 @@
 
 #define SRC_PATH "./src/"
 #define BINARY_NAME "bobble"
+#define TOOLS_PATH "./tools/"
 
 const char *_include_paths[] = {
     "./include",
@@ -55,7 +56,6 @@ int main(int argc, char **argv) {
     const char *program = shift_args(&argc, &argv);
     Cmd cmd = {0};
 
-
     // :options
     bool debug = false;
     bool run = false;
@@ -79,6 +79,19 @@ int main(int argc, char **argv) {
             return 1;
         }
     }
+
+    // Build tool(s)
+    nob_log(INFO, "Building tool(s)...");
+
+    nob_log(INFO, " - asset_packer:");
+    compiler(&cmd);
+    cmd_append(&cmd, "-o", "asset_packer");
+    cmd_append(&cmd, TOOLS_PATH"asset_packer.c");
+    include_paths(&cmd);
+    cmd_append(&cmd, "-I"TOOLS_PATH);
+    lib_paths(&cmd);
+    libs(&cmd);
+    if (!cmd_run(&cmd)) return 1;
 
     const char *binary = debug ? BINARY_NAME"-debug" : BINARY_NAME;
 

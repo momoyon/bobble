@@ -12,12 +12,6 @@
 
 #define COMMONLIB_VERSION "v0.1.13"
 
-#if defined(_WIN32) || defined(_MSC_VER)
-// TODO: Name collisions with raylib
-// NOTE: Don't include unwanted files to speed up compilation
-#undef C_ASSERT // Bruh
-#endif
-
 // Remove Prefix
 #ifdef COMMONLIB_REMOVE_PREFIX
 #define ASSERT C_ASSERT
@@ -45,6 +39,7 @@
 #define os_get_timedate c_os_get_timedate
 #define os_file_exists c_os_file_exists
 #define os_list_files c_os_list_files
+#define os_rename c_os_rename
 
 #define log_error c_log_error
 #define log_info c_log_info
@@ -119,6 +114,7 @@
 #define sv_lpop_arg c_sv_lpop_arg
 
 #define str_starts_with c_str_starts_with
+#define str_ends_with c_str_ends_with
 
 #define SET_FLAG C_SET_FLAG
 #define UNSET_FLAG C_UNSET_FLAG
@@ -276,7 +272,7 @@ typedef struct c_String_array c_String_array;
 #define c_darr_free(da) C_FREE((da).items)
 
 #define c_darr_remove_unordered(da, idx) do {\
-        if ((idx) >= 0 && (idx) <= (da).count-1) {\
+        if (((int)(idx) >= 0) && (idx) <= (da).count-1) {\
             (da).items[(idx)] = (da).items[(da).count-1];\
 			(da).count--;\
         } else {\
@@ -369,6 +365,7 @@ typedef struct c_String_array c_String_array;
 void c_os_get_timedate(c_Arena* a);
 bool c_os_file_exists(cstr filename);
 c_String_array c_os_list_files(cstr dir);
+bool c_os_rename(const char *from, const char *to);
 
 //
 // Logging
@@ -515,6 +512,7 @@ bool c_sv_lpop_arg(c_String_view *sv, c_String_view *out);
 //
 
 bool c_str_starts_with(const char *str, const char *suffix);
+bool c_str_ends_with(const char* str, const char* preffix);
 
 #endif /* _COMMONLIB_H_ */
 
@@ -524,6 +522,7 @@ bool c_str_starts_with(const char *str, const char *suffix);
 #include <errno.h>
 #include <stdlib.h>
 #include <assert.h>
+#include <math.h>
 
 // My things implementation:
 
@@ -604,15 +603,21 @@ void c_os_get_timedate(c_Arena* a) {
 }
 
 bool c_os_file_exists(cstr filename) {
-    (void)filename;
     return false;
 }
 
 c_String_array c_os_list_files(cstr dir) {
-    (void)dir;
     c_String_array res = {0};
     C_ASSERT(false, "UNIMPLEMENTED!");
     return res;
+}
+
+
+bool c_os_rename(const char *from, const char *to) {
+  (void)from;
+  (void)to;
+  C_ASSERT(false, "UNIMPLEMENTED");
+  return false;
 }
 
 #elif defined(__linux__)
@@ -665,6 +670,11 @@ c_String_array c_os_list_files(cstr dir) {
 
     return res;
 }
+
+bool c_os_rename(const char *from, const char *to) {
+  return rename(from, to) == 0;
+}
+
 #endif
 
 // simple and dirty way to have defering in C (not recommended to use!)
@@ -1213,6 +1223,14 @@ bool c_str_starts_with(const char *str, const char *suffix) {
         }
     }
     return true;
+}
+
+bool c_str_ends_with(const char* str, const char* prefix) {
+    if (str == NULL) return false;
+    size_t str_len = strlen(str);
+    size_t prefix_len = strlen(prefix);
+    if (prefix_len > str_len) return false;
+    return strcmp(str + str_len - prefix_len, prefix) == 0; 
 }
 
 #endif

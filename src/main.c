@@ -39,6 +39,7 @@ int main(void) {
 
     /// UI
     UI_begin(&ui, UI_LAYOUT_KIND_VERT);
+    UI_text(&ui, "Hi", 16, WHITE);
 
     /// Input
     if (IsKeyDown(KEY_LEFT_CONTROL) && IsKeyPressed(KEY_F)) {

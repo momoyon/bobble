@@ -1,8 +1,9 @@
 /bobble-debug
-/nob.old
+/*.old
 /thirdparty/raylib-5.5
 /bobble
 /compile_commands.json
 /*.exe
 /nob
 /.vscode
+/compile_flags.txt
