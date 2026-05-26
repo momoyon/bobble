@@ -609,6 +609,7 @@ bool c_os_file_exists(cstr filename) {
 }
 
 c_String_array c_os_list_files(cstr dir) {
+    (void)dir;
     c_String_array res = {0};
     C_ASSERT(false, "UNIMPLEMENTED!");
     return res;
