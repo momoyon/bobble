@@ -12,9 +12,13 @@ typedef struct Bob {
   int left_key;
   int right_key;
   int fire_key;
+
+  Sprite *joystick_spr;
+  float joystick_rotation;
+  float joystick_rotation_target;
 } Bob;
 
-Bob make_bob(Vector2 pos, int left_key, int right_key, int fire_key);
+Bob make_bob(Vector2 pos, int left_key, int right_key, int fire_key, Sprite *joystick_spr);
 void control_bob(Bob *b, float dt);
 void bound_bob_to_bounds(Bob *b, Rectangle bounds);
 void update_bob(Bob *b, float dt);

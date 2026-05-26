@@ -1222,7 +1222,6 @@ bool c_str_starts_with(const char *str, const char *suffix) {
     return true;
 }
 
-<<<<<<< HEAD
 bool c_str_ends_with(const char* str, const char* prefix) {
     if (str == NULL) return false;
     size_t str_len = strlen(str);
@@ -1231,6 +1230,4 @@ bool c_str_ends_with(const char* str, const char* prefix) {
     return strcmp(str + str_len - prefix_len, prefix) == 0; 
 }
 
-=======
->>>>>>> 8a7de9a945911dc36b588682ebaaef63b53eb4ce
 #endif

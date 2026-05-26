@@ -35,9 +35,9 @@ int main(void) {
     return 1;
   };
   Texture2D joystick_tex = {0};
-  if (!load_texture_from_data(
-          &g_asset_manager, "joystick.png", JOYSTICK_PNG_DATA,
-          JOYSTICK_PNG_DATA_SIZE, &joystick_tex)) {
+  if (!load_texture_from_data(&g_asset_manager, "joystick.png",
+                              JOYSTICK_PNG_DATA, JOYSTICK_PNG_DATA_SIZE,
+                              &joystick_tex)) {
     return 1;
   };
 
@@ -54,13 +54,12 @@ int main(void) {
   if (!init_sprite(&joystick_spr, joystick_tex, 2, 1)) {
     return 1;
   };
-
-  joystick_spr.pos.x = 112;
-  joystick_spr.pos.y = 514;
+  joystick_spr.origin = v2(22, 78);
+  joystick_spr.pos = v2_add(v2(112, 514), joystick_spr.origin);
 
   Bob bob = make_bob(
       v2(w / 2.f, g_play_bounds.y + g_play_bounds.height - BOB_DEFAULT_RADIUS),
-      KEY_LEFT, KEY_RIGHT, KEY_SPACE);
+      KEY_LEFT, KEY_RIGHT, KEY_SPACE, &joystick_spr);
 
   /// DEBUG UI
   UI ui = UI_make(get_default_ui_theme(), &g_font, v2xx(0), "DEBUG", &g_mpos);
@@ -72,7 +71,8 @@ int main(void) {
 
     /// UI
     UI_begin(&ui, UI_LAYOUT_KIND_VERT);
-    UI_text(&ui, "Hi", 16, WHITE);
+    UI_text(&ui, TextFormat("Bob.joystick_rotation: %f", bob.joystick_rotation), 16, WHITE);
+    UI_text(&ui, TextFormat("Bob.joystick_rotation_target: %f", bob.joystick_rotation_target), 16, WHITE);
 
     /// Input
     if (IsKeyDown(KEY_LEFT_CONTROL) && IsKeyPressed(KEY_F)) {
@@ -81,6 +81,7 @@ int main(void) {
     control_bob(&bob, g_delta);
     /// Update
     bound_bob_to_bounds(&bob, g_play_bounds);
+    update_bob(&bob, g_delta);
 
     /// Draw
     ClearBackground(GetColor(0x181818FF));
