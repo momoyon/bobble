@@ -55,7 +55,7 @@ int main(void) {
     return 1;
   };
   joystick_spr.origin = v2(22, 78);
-  joystick_spr.pos = v2_add(v2(112, 514), joystick_spr.origin);
+  joystick_spr.pos = v2_add(v2(106, 509), joystick_spr.origin);
 
   Bob bob = make_bob(
       v2(w / 2.f, g_play_bounds.y + g_play_bounds.height - BOB_DEFAULT_RADIUS),
