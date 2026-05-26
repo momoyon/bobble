@@ -3,3 +3,5 @@
 /thirdparty/raylib-5.5
 /bobble
 /compile_commands.json
+/*.exe
+/nob

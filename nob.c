@@ -17,6 +17,11 @@ const char *_lib_paths[] = {
 
 const char *_libs[] = {
     "m",
+#ifndef __linux__
+"raylib",
+"gdi32",
+"winmm",
+#endif
 };
 
 const char *_linker_flags[] = {
