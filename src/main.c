@@ -40,6 +40,12 @@ int main(void) {
                               &joystick_tex)) {
     return 1;
   };
+  Texture2D fire_button_tex = {0};
+  if (!load_texture_from_data(&g_asset_manager, "fire_button.png",
+                              FIRE_BUTTON_PNG_DATA, FIRE_BUTTON_PNG_DATA_SIZE,
+                              &fire_button_tex)) {
+    return 1;
+  };
 
   // Sprites init
   Sprite overlay_spr = {0};
@@ -56,10 +62,15 @@ int main(void) {
   };
   joystick_spr.origin = v2(22, 78);
   joystick_spr.pos = v2_add(v2(106, 509), joystick_spr.origin);
+  Sprite fire_button_spr = {0};
+  if (!init_sprite(&fire_button_spr, fire_button_tex, 1, 1)) {
+    return 1;
+  };
+  fire_button_spr.pos = v2(265, 579);
 
   Bob bob = make_bob(
       v2(w / 2.f, g_play_bounds.y + g_play_bounds.height - BOB_DEFAULT_RADIUS),
-      KEY_LEFT, KEY_RIGHT, KEY_SPACE, &joystick_spr);
+      KEY_LEFT, KEY_RIGHT, KEY_Z, &joystick_spr, &fire_button_spr);
 
   /// DEBUG UI
   UI ui = UI_make(get_default_ui_theme(), &g_font, v2xx(0), "DEBUG", &g_mpos);
@@ -90,6 +101,7 @@ int main(void) {
 
     draw_sprite(&overlay_spr);
     draw_sprite(&joystick_spr);
+    draw_sprite(&fire_button_spr);
 
     if (g_debug) {
       DrawRectangleLinesEx(g_play_bounds, 1.f, WHITE);
@@ -105,6 +117,7 @@ int main(void) {
   free_sprite(&overlay_spr);
   free_sprite(&screen_bg_spr);
   free_sprite(&joystick_spr);
+  free_sprite(&fire_button_spr);
 
   clean_asset_manager(&g_asset_manager);
   UI_free(&ui);

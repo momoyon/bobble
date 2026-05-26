@@ -2,7 +2,7 @@
 #include <bob.h>
 #include <config.h>
 
-Bob make_bob(Vector2 pos, int left_key, int right_key, int fire_key, Sprite *joystick_spr) {
+Bob make_bob(Vector2 pos, int left_key, int right_key, int fire_key, Sprite *joystick_spr, Sprite *fire_button_spr) {
   Bob res = {0};
   res.pos = pos;
   res.left_key = left_key;
@@ -13,6 +13,9 @@ Bob make_bob(Vector2 pos, int left_key, int right_key, int fire_key, Sprite *joy
   res.joystick_spr = joystick_spr;
   res.joystick_rotation = 0.f;
   res.joystick_rotation_target = 0.f;
+  res.fire_button_spr = fire_button_spr;
+  res.fire_button_press_y = fire_button_spr ? fire_button_spr->pos.y : 0.f;
+  res.fire_button_press_y_offset = 0.f;
 
   return res;
 }
@@ -20,6 +23,7 @@ Bob make_bob(Vector2 pos, int left_key, int right_key, int fire_key, Sprite *joy
 void control_bob(Bob *b, float dt) {
   float vel = 0.f;
   b->joystick_rotation_target = 0.f;
+  b->fire_button_press_y_offset = 0;
   const float D = 30.f;
   if (IsKeyDown(b->left_key)) {
     vel = -b->speed * dt;
@@ -32,6 +36,13 @@ void control_bob(Bob *b, float dt) {
   }
 
   b->pos.x += vel;
+
+  if (IsKeyDown(b->fire_key)) {
+    if (b->fire_button_spr) {
+      b->fire_button_press_y_offset = 12;
+    }
+    log_debug("FIRE");
+  }
 }
 
 void bound_bob_to_bounds(Bob *b, Rectangle bounds) {
@@ -50,7 +61,6 @@ void bound_bob_to_bounds(Bob *b, Rectangle bounds) {
   if (b->pos.y > bounds.y + bounds.height - b->radius) {
     b->pos.y = bounds.y + bounds.height - b->radius;
   }
-
 }
 
 void update_bob(Bob *b, float dt) {
@@ -58,6 +68,10 @@ void update_bob(Bob *b, float dt) {
 
   if (b->joystick_spr) {
     b->joystick_spr->rotation = b->joystick_rotation;
+  }
+
+  if (b->fire_button_spr) {
+    b->fire_button_spr->pos.y = b->fire_button_press_y + b->fire_button_press_y_offset;
   }
 }
 
