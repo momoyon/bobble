@@ -14,10 +14,10 @@ float g_delta = 0.f;
 Vector2 g_mpos = {0};
 
 Rectangle g_play_bounds = {
-  .x = BOB_DEFAULT_RADIUS,
-  .y = BOB_DEFAULT_RADIUS,
-  .width = 1280-(BOB_DEFAULT_RADIUS*2.f),
-  .height = 720-(BOB_DEFAULT_RADIUS*2.f),
+  .x = 32*2.f,
+  .y = 32*2.f,
+  .width = 32*36,
+  .height = 32*14,
 };
 State g_state = STATE_MAIN_MENU;
 Font g_font = {0};

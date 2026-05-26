@@ -58,7 +58,7 @@ bool pack_assets(const char *pack_folder_path, const char *assets_folder_path) {
 int main(void) {
 
   if (DirectoryExists(PACK_FOLDER)) {
-    if (!os_rename(_PACK_FOLDER, _PACK_FOLDER".old")) {
+    if (rename(_PACK_FOLDER, _PACK_FOLDER".old") != 0) {
       log_error("Failed to rename %s -> %s.old", _PACK_FOLDER, _PACK_FOLDER);
     }
   }

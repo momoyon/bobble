@@ -20,12 +20,6 @@ int main(void) {
   w = g_window_width;
   h = g_window_height;
 
-  g_play_bounds = CLITERAL(Rectangle){
-      32.f,
-      32.f,
-      w - (32.f * 2),
-      h - (32.f * 2),
-  };
   g_font = GetFontDefault();
 
   // Textures init
@@ -40,6 +34,12 @@ int main(void) {
           SCREEN_BACKGROUND_PNG_DATA_SIZE, &screen_bg_tex)) {
     return 1;
   };
+  Texture2D joystick_tex = {0};
+  if (!load_texture_from_data(
+          &g_asset_manager, "joystick.png", JOYSTICK_PNG_DATA,
+          JOYSTICK_PNG_DATA_SIZE, &joystick_tex)) {
+    return 1;
+  };
 
   // Sprites init
   Sprite overlay_spr = {0};
@@ -50,6 +50,13 @@ int main(void) {
   if (!init_sprite(&screen_bg_spr, screen_bg_tex, 1, 1)) {
     return 1;
   };
+  Sprite joystick_spr = {0};
+  if (!init_sprite(&joystick_spr, joystick_tex, 2, 1)) {
+    return 1;
+  };
+
+  joystick_spr.pos.x = 112;
+  joystick_spr.pos.y = 514;
 
   Bob bob = make_bob(
       v2(w / 2.f, g_play_bounds.y + g_play_bounds.height - BOB_DEFAULT_RADIUS),
@@ -80,12 +87,13 @@ int main(void) {
     draw_sprite(&screen_bg_spr);
     draw_bob(&bob);
 
+    draw_sprite(&overlay_spr);
+    draw_sprite(&joystick_spr);
+
     if (g_debug) {
       DrawRectangleLinesEx(g_play_bounds, 1.f, WHITE);
       UI_draw(&ui);
     }
-
-    draw_sprite(&overlay_spr);
 
     UI_end(&ui);
 
@@ -95,6 +103,7 @@ int main(void) {
   // Sprites deinit
   free_sprite(&overlay_spr);
   free_sprite(&screen_bg_spr);
+  free_sprite(&joystick_spr);
 
   clean_asset_manager(&g_asset_manager);
   UI_free(&ui);

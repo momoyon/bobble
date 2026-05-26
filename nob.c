@@ -1,3 +1,4 @@
+#include <assert.h>
 #define NOB_IMPLEMENTATION
 #include "include/nob.h"
 #include <string.h>
@@ -6,6 +7,12 @@
 #define SRC_PATH "./src/"
 #define BINARY_NAME "bobble"
 #define TOOLS_PATH "./tools/"
+
+#ifdef _WIN32
+#define BINARY_EXT ".exe"
+#else
+#define BINARY_EXT ""
+#endif
 
 const char *_include_paths[] = {
     "./include",
@@ -93,6 +100,14 @@ int main(int argc, char **argv) {
     libs(&cmd);
 
     if (!cmd_run(&cmd)) return 1;
+
+    // Run tool(s)
+    nob_log(INFO, "Running tool(s)...");
+    assert(file_exists("asset_packer"BINARY_EXT) && "This should not happen!");
+    cmd_append(&cmd, "asset_packer"BINARY_EXT);
+    nob_log(INFO, " - asset_packer:");
+    if (!cmd_run(&cmd)) return 1;
+
 
     nob_log(INFO, "Building Binary%s...", debug ? "(Debug)" : "");
     const char *binary = debug ? BINARY_NAME"-debug" : BINARY_NAME;

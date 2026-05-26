@@ -9,7 +9,16 @@
 #include <assert.h>
 #include <limits.h>
 
-#define COMMONLIB_VERSION "v0.1.13"
+#define COMMONLIB_VERSION "v0.1.14"
+
+#if defined(_WIN32) || defined(__CYGWIN__)
+#define WIN32_LEAN_AND_MEAN
+#define NOGDI
+#define NOUSER
+#include <windows.h>
+#undef ASSERT  // clear windows' version
+#undef C_ASSERT  // clear windows' version
+#endif
 
 // Remove Prefix
 #ifdef COMMONLIB_REMOVE_PREFIX
@@ -38,7 +47,6 @@
 #define os_get_timedate c_os_get_timedate
 #define os_file_exists c_os_file_exists
 #define os_list_files c_os_list_files
-#define os_rename c_os_rename
 
 #define log_error c_log_error
 #define log_info c_log_info
@@ -364,7 +372,6 @@ typedef struct c_String_array c_String_array;
 void c_os_get_timedate(c_Arena* a);
 bool c_os_file_exists(cstr filename);
 c_String_array c_os_list_files(cstr dir);
-bool c_os_rename(const char *from, const char *to);
 
 //
 // Logging
@@ -614,14 +621,6 @@ c_String_array c_os_list_files(cstr dir) {
     return res;
 }
 
-
-bool c_os_rename(const char *from, const char *to) {
-  (void)from;
-  (void)to;
-  C_ASSERT(false, "UNIMPLEMENTED");
-  return false;
-}
-
 #elif defined(__linux__)
 #include <stdio.h>
 #include <stdlib.h>
@@ -671,10 +670,6 @@ c_String_array c_os_list_files(cstr dir) {
     closedir(dp);
 
     return res;
-}
-
-bool c_os_rename(const char *from, const char *to) {
-  return rename(from, to) == 0;
 }
 
 #endif
@@ -1227,6 +1222,7 @@ bool c_str_starts_with(const char *str, const char *suffix) {
     return true;
 }
 
+<<<<<<< HEAD
 bool c_str_ends_with(const char* str, const char* prefix) {
     if (str == NULL) return false;
     size_t str_len = strlen(str);
@@ -1235,4 +1231,6 @@ bool c_str_ends_with(const char* str, const char* prefix) {
     return strcmp(str + str_len - prefix_len, prefix) == 0; 
 }
 
+=======
+>>>>>>> 8a7de9a945911dc36b588682ebaaef63b53eb4ce
 #endif
