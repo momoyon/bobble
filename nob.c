@@ -93,6 +93,7 @@ int main(int argc, char **argv) {
     nob_log(INFO, " - asset_packer:");
     compiler(&cmd);
     cmd_append(&cmd, "-o", "asset_packer");
+    cmd_append(&cmd, "-ggdb");
     cmd_append(&cmd, TOOLS_PATH"asset_packer.c");
     include_paths(&cmd);
     cmd_append(&cmd, "-I"TOOLS_PATH);
@@ -104,7 +105,7 @@ int main(int argc, char **argv) {
     // Run tool(s)
     nob_log(INFO, "Running tool(s)...");
     assert(file_exists("asset_packer"BINARY_EXT) && "This should not happen!");
-    cmd_append(&cmd, "asset_packer"BINARY_EXT);
+    cmd_append(&cmd, "./asset_packer"BINARY_EXT);
     nob_log(INFO, " - asset_packer:");
     if (!cmd_run(&cmd)) return 1;
 
