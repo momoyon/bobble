@@ -11,6 +11,10 @@
 #include "commonlib.h"
 
 int main(void) {
+
+  read_config(NULL, "config.momo");
+
+  return 2;
   int w, h;
   if (!init_window(g_screen_width, g_screen_height, g_screen_scale, "Bobble",
                    &g_window_width, &g_window_height)) {

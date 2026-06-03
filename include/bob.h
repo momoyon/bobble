@@ -20,6 +20,7 @@ typedef struct Bob {
   Sprite *fire_button_spr;
   float fire_button_press_y;
   float fire_button_press_y_offset;
+  float fire_button_press_y_offset_target;
 } Bob;
 
 Bob make_bob(Vector2 pos, int left_key, int right_key, int fire_key, Sprite *joystick_spr, Sprite *fire_button_spr);

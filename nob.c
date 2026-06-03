@@ -110,6 +110,7 @@ int main(int argc, char **argv) {
     if (!cmd_run(&cmd)) return 1;
 
 
+    // Build binary
     nob_log(INFO, "Building Binary%s...", debug ? "(Debug)" : "");
     const char *binary = debug ? BINARY_NAME"-debug" : BINARY_NAME;
 
@@ -122,6 +123,7 @@ int main(int argc, char **argv) {
 
     compiler(&cmd);
     cmd_append(&cmd, "-o", binary);
+    cmd_append(&cmd, "-ggdb");
     if (debug) {
         cmd_append(&cmd, "-DDEBUG");
     }

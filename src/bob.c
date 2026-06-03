@@ -16,6 +16,7 @@ Bob make_bob(Vector2 pos, int left_key, int right_key, int fire_key, Sprite *joy
   res.fire_button_spr = fire_button_spr;
   res.fire_button_press_y = fire_button_spr ? fire_button_spr->pos.y : 0.f;
   res.fire_button_press_y_offset = 0.f;
+  res.fire_button_press_y_offset_target = 0.f;
 
   return res;
 }
@@ -23,7 +24,7 @@ Bob make_bob(Vector2 pos, int left_key, int right_key, int fire_key, Sprite *joy
 void control_bob(Bob *b, float dt) {
   float vel = 0.f;
   b->joystick_rotation_target = 0.f;
-  b->fire_button_press_y_offset = 0;
+  b->fire_button_press_y_offset_target = 0;
   const float D = 30.f;
   if (IsKeyDown(b->left_key)) {
     vel = -b->speed * dt;
@@ -39,9 +40,8 @@ void control_bob(Bob *b, float dt) {
 
   if (IsKeyDown(b->fire_key)) {
     if (b->fire_button_spr) {
-      b->fire_button_press_y_offset = 12;
+      b->fire_button_press_y_offset_target = 12;
     }
-    log_debug("FIRE");
   }
 }
 
@@ -65,6 +65,7 @@ void bound_bob_to_bounds(Bob *b, Rectangle bounds) {
 
 void update_bob(Bob *b, float dt) {
   b->joystick_rotation += (b->joystick_rotation_target - b->joystick_rotation) * dt * 10.f;
+  b->fire_button_press_y_offset += (b->fire_button_press_y_offset_target - b->fire_button_press_y_offset) * dt * 100.f;
 
   if (b->joystick_spr) {
     b->joystick_spr->rotation = b->joystick_rotation;
