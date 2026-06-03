@@ -124,6 +124,7 @@ int main(int argc, char **argv) {
     cmd_append(&cmd, "-o", binary);
     if (debug) {
         cmd_append(&cmd, "-DDEBUG");
+        cmd_append(&cmd, "-ggdb");
     }
     for (int i = 0; i < src_files.count; ++i) {
         const char *src_file = src_files.items[i];

@@ -41,7 +41,6 @@ void control_bob(Bob *b, float dt) {
     if (b->fire_button_spr) {
       b->fire_button_press_y_offset = 12;
     }
-    log_debug("FIRE");
   }
 }
 
