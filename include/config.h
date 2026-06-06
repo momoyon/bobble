@@ -17,6 +17,7 @@ extern float g_delta;
 extern Vector2 g_mpos;
 
 extern Rectangle g_play_bounds;
+extern float g_gravity;
 extern State g_state;
 extern Font g_font;
 

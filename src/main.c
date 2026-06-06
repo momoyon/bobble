@@ -1,5 +1,6 @@
 #include "bob.h"
 #include "raylib.h"
+#include <ball.h>
 #include <config.h>
 #include <packed.h>
 
@@ -76,8 +77,14 @@ int main(void) {
       v2(w / 2.f, g_play_bounds.y + g_play_bounds.height - BOB_DEFAULT_RADIUS),
       KEY_LEFT, KEY_RIGHT, KEY_Z, &joystick_spr, &fire_button_spr);
 
+  /// @TEMP
+  Vector2 play_bounds_size = v2(g_play_bounds.width, g_play_bounds.height);
+  Ball b = make_ball(v2_add(v2(g_play_bounds.x, g_play_bounds.y),
+                            v2_scale(play_bounds_size, 0.5)),
+                     fire_button_tex);
+
   /// DEBUG UI
-  UI ui = UI_make(get_default_ui_theme(), &g_font, v2xx(0), "DEBUG", &g_mpos);
+  UI ui = UI_make(get_default_ui_theme(), &g_font, v2xx(10), "DEBUG", &g_mpos);
 
   while (!WindowShouldClose()) {
     g_delta = GetFrameTime();
@@ -86,8 +93,12 @@ int main(void) {
 
     /// UI
     UI_begin(&ui, UI_LAYOUT_KIND_VERT);
-    UI_text(&ui, TextFormat("Bob.joystick_rotation: %f", bob.joystick_rotation), 16, WHITE);
-    UI_text(&ui, TextFormat("Bob.joystick_rotation_target: %f", bob.joystick_rotation_target), 16, WHITE);
+    UI_text(&ui, TextFormat("Bob.joystick_rotation: %f", bob.joystick_rotation),
+            16, WHITE);
+    UI_text(&ui,
+            TextFormat("Bob.joystick_rotation_target: %f",
+                       bob.joystick_rotation_target),
+            16, WHITE);
 
     /// Input
     if (IsKeyDown(KEY_LEFT_CONTROL) && IsKeyPressed(KEY_F)) {
@@ -97,11 +108,13 @@ int main(void) {
     /// Update
     bound_bob_to_bounds(&bob, g_play_bounds);
     update_bob(&bob, g_delta);
+    update_ball(&b, g_delta);
 
     /// Draw
     ClearBackground(GetColor(0x181818FF));
     draw_sprite(&screen_bg_spr);
     draw_bob(&bob);
+    draw_ball(&b);
 
     draw_sprite(&overlay_spr);
     draw_sprite(&joystick_spr);

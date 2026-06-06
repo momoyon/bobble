@@ -73,9 +73,36 @@ bool rmrf(const char *path) {
   return nftw(path, unlink_cb, 64, FTW_DEPTH | FTW_PHYS) == 0;
 }
 #else
+#include <windows.h>
+
 bool rmrf(const char *path) {
-  ASSERT(false, "Windows version of rmrf() is not implemeted yet!");
-  return false;
+    WIN32_FIND_DATAA data;
+    HANDLE find;
+    char pattern[MAX_PATH];
+    
+    snprintf(pattern, MAX_PATH, "%s\\*", path);
+    find = FindFirstFileA(pattern, &data);
+    if (find == INVALID_HANDLE_VALUE) {
+        RemoveDirectoryA(path);
+        return true;
+    }
+    
+    do {
+        if (strcmp(data.cFileName, ".") == 0 || strcmp(data.cFileName, "..") == 0)
+            continue;
+        
+        char filepath[MAX_PATH];
+        snprintf(filepath, MAX_PATH, "%s\\%s", path, data.cFileName);
+        
+        if (data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+            rmrf(filepath);  // recurse
+        else
+            DeleteFileA(filepath);
+    } while (FindNextFileA(find, &data));
+    
+    FindClose(find);
+    RemoveDirectoryA(path);
+    return true;
 }
 
 #endif /* ifdef  __linux__ */

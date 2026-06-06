@@ -19,6 +19,8 @@ Rectangle g_play_bounds = {
   .width = 32*36,
   .height = 32*14,
 };
+
+float g_gravity = 9.8f;
 State g_state = STATE_MAIN_MENU;
 Font g_font = {0};
 
