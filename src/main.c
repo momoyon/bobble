@@ -12,9 +12,23 @@
 #include "commonlib.h"
 
 int main(void) {
+  Config config = {0};
 
-  read_config(NULL, "config.momo");
+  read_config(&config, "config.momo");
 
+  Arena str_arena = arena_make(0);
+
+  int keyvalue_count = (int)shlen(config);
+  log_debug("Config has %d keyvalues", keyvalue_count);
+  for (int i = 0; i < shlen(config); ++i) {
+    const char *key = config[i].key;
+    Config_value value = config[i].value;
+    log_debug("Key %s: %s", key, config_value_as_str(&str_arena, value));
+  }
+
+  Config_value value = get_value_from_config(&config, "foo");
+  
+  arena_free(&str_arena);
   return 2;
   int w, h;
   if (!init_window(g_screen_width, g_screen_height, g_screen_scale, "Bobble",

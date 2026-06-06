@@ -486,15 +486,17 @@ struct Config_value {
     Config_value *conf;
   } as;
   Config_value_kind kind;
+  const char *varname; // Only values of variables have this set (obviously)
   const char *err_msg;
 };
 
-typedef struct Config Config;
+typedef struct Config_KV Config_KV;
+typedef Config_KV *Config;
 Config_value config_value_from_sv(String_view sv, Config *config);
 const char *config_value_as_str(Arena *str_arena, const Config_value cv);
 
-struct Config {
-  const char *key;
+struct Config_KV {
+  char *key;
   Config_value value;
 };
 
@@ -509,8 +511,10 @@ struct Config {
  * speed = 200.0 # float
  * name  = "bob" # string
  * char = 'A'    # char
+ * var = char    # variable
  */
 bool read_config(Config *config, const char *config_filepath);
+Config_value get_value_from_config(Config *config, const char *key);
 
 // NOTE: Assets Manager
 typedef struct {
@@ -2567,7 +2571,7 @@ Config_value config_value_from_sv(String_view sv, Config *config) {
     String_view str = sv;
     sv_lremove(&str, 1); // Remove "
 
-    if (str.count <= 0 || str.data[str.count-1] != '"') {
+    if (str.count <= 0 || str.data[str.count - 1] != '"') {
       res.err_msg = "Unterminated string: Expected \"";
       return res;
     }
@@ -2575,10 +2579,12 @@ Config_value config_value_from_sv(String_view sv, Config *config) {
     c_sv_rremove(&str, 1); // Remove ending "
 
     if (str.count > 0) {
-      char *s = (char *)malloc(sizeof(char)*str.count+1);
+      char *s = (char *)malloc(sizeof(char) * str.count + 1);
 
       memcpy(s, str.data, str.count);
-      
+
+      s[str.count] = 0;
+
       res.as.str = s;
     } else {
       ASSERT(false, "String is empty");
@@ -2610,17 +2616,20 @@ Config_value config_value_from_sv(String_view sv, Config *config) {
 
     const char *varname = c_sv_to_cstr(sv);
 
-    // log_debug("Config currently has %d variables declared, trying to find var '%s'", (int)shlen(config), varname);
-    Config *varvalue = (Config *)shgetp_null(config, varname);
+    // log_debug("Config currently has %d variables declared, trying to find var
+    // '%s'", (int)shlen(config), varname);
+    Config_KV *varvalue = (Config_KV *)shgetp_null(*config, varname);
+    varvalue->value.varname = varname;
 
     if (varvalue == NULL) {
       res.err_msg = "Undeclared variable";
-      free((void *)varname);
       return res;
     }
 
-    c_Arena str_arena = arena_make(0); // TODO: Should this be passed as an argument?
-    // log_debug("Var '%s': %s", varname, config_value_as_str(&str_arena, varvalue->value));
+    c_Arena str_arena =
+        arena_make(0); // TODO: Should this be passed as an argument?
+    // log_debug("Var '%s': %s", varname, config_value_as_str(&str_arena,
+    // varvalue->value));
 
     res.as.conf = &varvalue->value;
 
@@ -2648,7 +2657,8 @@ const char *config_value_as_str(Arena *str_arena, const Config_value cv) {
     res = c_arena_alloc_str(*str_arena, "%s", cv.as.str);
   } break;
   case CONF_VAL_VAR: {
-    res = c_arena_alloc_str(*str_arena, "%s", "variable (TODO: lookup value)");
+    res = c_arena_alloc_str(*str_arena, "%s: %s", cv.varname,
+                            config_value_as_str(str_arena, *cv.as.conf));
   } break;
   case CONF_VAL_COUNT:
   default:
@@ -2669,6 +2679,7 @@ bool read_config(Config *config, const char *config_filepath) {
 
   int row = 1; // row is linenumber
   c_Arena str_arena = c_arena_make(0);
+  int keyvalue_count = (int)shlen(*config);
   while (sv.count > 0) {
     c_arena_reset(&str_arena);
     sv_trim(&sv);
@@ -2679,7 +2690,7 @@ bool read_config(Config *config, const char *config_filepath) {
       // Tis a comment
       c_sv_lremove(&line, 1); // Remove #
       sv_trim(&line);
-      log_debug("Comment in config:%d:0: " SV_FMT, row, SV_ARG(line));
+      // log_debug("Comment in config:%d:0: " SV_FMT, row, SV_ARG(line));
     } else {
       if (!c_sv_contains_char(line, '=')) {
         log_error("%s:%d:0: Invalid format: Line does not contain '='",
@@ -2697,19 +2708,21 @@ bool read_config(Config *config, const char *config_filepath) {
 
       Config_value value = config_value_from_sv(value_sv, config);
       if (value.err_msg) {
-        log_error("%s:%d:0: Failed to parse value: %s", config_filepath, row, value.err_msg);
+        log_error("%s:%d:0: Failed to parse value: %s", config_filepath, row,
+                  value.err_msg);
         break;
       }
 
-      log_debug("%s:%d:0: Key '" SV_FMT "', Value: %s (%s)", config_filepath,
-                row, SV_ARG(key_sv), config_value_as_str(&str_arena, value),
-                config_value_kind_as_str(value.kind));
+      // log_debug("%s:%d:0: Key '" SV_FMT "', Value: %s (%s)", config_filepath,
+      //           row, SV_ARG(key_sv), config_value_as_str(&str_arena, value),
+      //           config_value_kind_as_str(value.kind));
 
       const char *key = c_sv_to_cstr(key_sv);
-      shput(config, key, value);
+      shput(*config, (char *)key, value);
 
-      free((void *)key);
+      keyvalue_count = (int)shlen(*config);
     }
+    keyvalue_count = (int)shlen(*config);
 
     row++;
   }
@@ -2717,6 +2730,19 @@ bool read_config(Config *config, const char *config_filepath) {
   free((void *)f);
   c_arena_free(&str_arena);
   return true;
+}
+
+Config_value get_value_from_config(Config *config, const char *key) {
+  Config_value value = {
+    .err_msg = "Invalid",
+  };
+
+  Config_KV *kv = shgetp_null(*config, key);
+  if (kv != NULL) {
+    value = kv->value;
+  }
+
+  return value;
 }
 
 bool input_to_buff_ignored(char *buff, size_t buff_cap, int *cursor,
