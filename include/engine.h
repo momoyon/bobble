@@ -500,6 +500,10 @@ struct Config_KV {
   Config_value value;
 };
 
+// TODO: Config_value vars doesn't correctly set the varname.
+// TODO: variables now are references, maybe make it a copy instead.
+// Comments after a statement Eg: 'foo = 2 # This should be allowed'
+
 /*
  *
  * Config Format:
@@ -514,7 +518,8 @@ struct Config_KV {
  * var = char    # variable
  */
 bool read_config(Config *config, const char *config_filepath);
-Config_value get_value_from_config(Config *config, const char *key);
+bool get_value_from_config(Config *config, const char *key,
+                           Config_value *value_out);
 
 // NOTE: Assets Manager
 typedef struct {
@@ -2657,7 +2662,7 @@ const char *config_value_as_str(Arena *str_arena, const Config_value cv) {
     res = c_arena_alloc_str(*str_arena, "%s", cv.as.str);
   } break;
   case CONF_VAL_VAR: {
-    res = c_arena_alloc_str(*str_arena, "%s: %s", cv.varname,
+    res = c_arena_alloc_str(*str_arena, "%s",
                             config_value_as_str(str_arena, *cv.as.conf));
   } break;
   case CONF_VAL_COUNT:
@@ -2732,17 +2737,18 @@ bool read_config(Config *config, const char *config_filepath) {
   return true;
 }
 
-Config_value get_value_from_config(Config *config, const char *key) {
-  Config_value value = {
-    .err_msg = "Invalid",
-  };
+bool get_value_from_config(Config *config, const char *key,
+                           Config_value *value_out) {
+  if (value_out) {
+    value_out->err_msg = "Invalid";
+  }
 
   Config_KV *kv = shgetp_null(*config, key);
   if (kv != NULL) {
-    value = kv->value;
+    *value_out = kv->value;
   }
 
-  return value;
+  return kv != NULL;
 }
 
 bool input_to_buff_ignored(char *buff, size_t buff_cap, int *cursor,

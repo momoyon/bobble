@@ -18,15 +18,22 @@ int main(void) {
 
   Arena str_arena = arena_make(0);
 
-  int keyvalue_count = (int)shlen(config);
-  log_debug("Config has %d keyvalues", keyvalue_count);
-  for (int i = 0; i < shlen(config); ++i) {
-    const char *key = config[i].key;
-    Config_value value = config[i].value;
-    log_debug("Key %s: %s", key, config_value_as_str(&str_arena, value));
+  // int keyvalue_count = (int)shlen(config);
+  // log_debug("Config has %d keyvalues", keyvalue_count);
+  // for (int i = 0; i < shlen(config); ++i) {
+  //   const char *key = config[i].key;
+  //   Config_value value = config[i].value;
+  //   log_debug("Key %s: %s", key, config_value_as_str(&str_arena, value));
+  // }
+
+  Config_value value = {0};
+  if (get_value_from_config(&config, "foo", &value)) {
+    log_info("Got value `foo` from config: %s", config_value_as_str(&str_arena, value));
   }
 
-  Config_value value = get_value_from_config(&config, "foo");
+  if (get_value_from_config(&config, "var", &value)) {
+    log_info("Got value `var` from config: %s", config_value_as_str(&str_arena, value));
+  }
   
   arena_free(&str_arena);
   return 2;
