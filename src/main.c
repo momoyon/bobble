@@ -26,17 +26,16 @@ int main(void) {
   //   log_debug("Key %s: %s", key, config_value_as_str(&str_arena, value));
   // }
 
-  Config_value value = {0};
-  if (get_value_from_config(&config, "foo", &value)) {
-    log_info("Got value `foo` from config: %s", config_value_as_str(&str_arena, value));
+  int foo = -1;
+  if (!get_int_from_config(&config, "foo", &foo)) {
+    log_error("Failed to get 'foo' (int)");
+    return 1;
   }
-
-  if (get_value_from_config(&config, "var", &value)) {
-    log_info("Got value `var` from config: %s", config_value_as_str(&str_arena, value));
-  }
+  log_debug("'foo' is: %d", foo);
   
   arena_free(&str_arena);
-  return 2;
+  return 0;
+
   int w, h;
   if (!init_window(g_screen_width, g_screen_height, g_screen_scale, "Bobble",
                    &g_window_width, &g_window_height)) {
