@@ -14,7 +14,7 @@
 int main(void) {
   Config config = {0};
 
-  read_config(&config, "config.momo");
+  read_config(&config, "newconfig.momo");
 
   Arena str_arena = arena_make(0);
 
@@ -57,9 +57,13 @@ int main(void) {
   log_debug("======== SETTING ==============================");
   set_int_to_config(&config, "foo", 49);
   set_float_to_config(&config, "bar", 4.0134);
-  set_float_to_config(&config, "new_float", 4.0134);
   set_char_to_config(&config, "baz", 'Z');
   set_str_to_config(&config, "alice", "This is not that long a string(lie)");
+
+  set_int_to_config(&config, "new_int", 1337);
+  set_float_to_config(&config, "new_float", 9.3432);
+  set_char_to_config(&config, "new_char", '-');
+  set_str_to_config(&config, "new_string", "Hi lol");
 
   log_debug("== AFTER SETTING ==============================");
   {
@@ -88,6 +92,9 @@ int main(void) {
     log_debug("'alice' is: %s", alice);
   }
   log_debug("keyvalues count: %d", (int)shlen(config));
+
+
+  if (!write_config(&config, "newconfig.momo")) return 1;
 
   arena_free(&str_arena);
   return 0;

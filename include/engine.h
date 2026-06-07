@@ -518,12 +518,14 @@ struct Config_KV {
  * var = char    # variable
  */
 bool read_config(Config *config, const char *config_filepath);
+bool write_config(Config *config, const char *config_filepath);
 bool get_value_from_config(Config *config, const char *key,
                            Config_value *value_out);
 bool get_int_from_config(Config *config, const char *key, int *value_out);
 bool get_float_from_config(Config *config, const char *key, float *value_out);
 bool get_char_from_config(Config *config, const char *key, char *value_out);
-bool get_str_from_config(Config *config, const char *key, const char **value_out);
+bool get_str_from_config(Config *config, const char *key,
+                         const char **value_out);
 
 bool set_int_to_config(Config *config, const char *key, int value);
 bool set_float_to_config(Config *config, const char *key, float value);
@@ -2746,6 +2748,52 @@ bool read_config(Config *config, const char *config_filepath) {
   return true;
 }
 
+bool write_config(Config *config, const char *config_filepath) {
+  if (!config) {
+    log_error("Config passed is corrupt/invalid");
+    return false;
+  }
+
+  FILE *f = fopen(config_filepath, "w");
+
+  if (!f) {
+    log_error("Failed to open file '%s'", config_filepath);
+    return false;
+  }
+
+  int keyvalues_count = (int)(int)shlen(*config);
+  for (int i = 0; i < keyvalues_count; ++i) {
+    const char *key = (*config)[i].key;
+    Config_value value = (*config)[i].value;
+
+    fprintf(f, "%s = ", key);
+    switch (value.kind) {
+    case CONF_VAL_INT: {
+      fprintf(f, "%d", value.as.i);
+    } break;
+    case CONF_VAL_FLT: {
+      fprintf(f, "%f", value.as.f);
+    } break;
+    case CONF_VAL_CHR: {
+      fprintf(f, "'%c'", value.as.ch);
+    } break;
+    case CONF_VAL_STR: {
+      fprintf(f, "\"%s\"", value.as.str);
+    } break;
+    case CONF_VAL_VAR: {
+      fprintf(f, "%s", key);
+    } break;
+    case CONF_VAL_COUNT:
+    default:
+      ASSERT(false, "UNREACHABLE!");
+    }
+    if (i < keyvalues_count-1) fprintf(f, "\n");
+  }
+
+  fclose(f);
+  return true;
+}
+
 bool get_value_from_config(Config *config, const char *key,
                            Config_value *value_out) {
   if (value_out) {
@@ -2768,7 +2816,8 @@ bool get_int_from_config(Config *config, const char *key, int *value_out) {
   }
 
   if (value.kind != CONF_VAL_INT) {
-    log_debug("Key '%s' expected to be int but was %s", key, config_value_kind_as_str(value.kind));
+    log_debug("Key '%s' expected to be int but was %s", key,
+              config_value_kind_as_str(value.kind));
     return false;
   }
 
@@ -2785,7 +2834,8 @@ bool get_float_from_config(Config *config, const char *key, float *value_out) {
   }
 
   if (value.kind != CONF_VAL_FLT) {
-    log_debug("Key '%s' expected to be float but was %s", key, config_value_kind_as_str(value.kind));
+    log_debug("Key '%s' expected to be float but was %s", key,
+              config_value_kind_as_str(value.kind));
     return false;
   }
 
@@ -2802,7 +2852,8 @@ bool get_char_from_config(Config *config, const char *key, char *value_out) {
   }
 
   if (value.kind != CONF_VAL_CHR) {
-    log_debug("Key '%s' expected to be char but was %s", key, config_value_kind_as_str(value.kind));
+    log_debug("Key '%s' expected to be char but was %s", key,
+              config_value_kind_as_str(value.kind));
     return false;
   }
 
@@ -2811,7 +2862,8 @@ bool get_char_from_config(Config *config, const char *key, char *value_out) {
   return true;
 }
 
-bool get_str_from_config(Config *config, const char *key, const char **value_out) {
+bool get_str_from_config(Config *config, const char *key,
+                         const char **value_out) {
   Config_value value = {.err_msg = "get_int_from_config::Invalid"};
   if (!get_value_from_config(config, key, &value)) {
     log_debug("Failed to get key '%s'", key);
@@ -2819,7 +2871,8 @@ bool get_str_from_config(Config *config, const char *key, const char **value_out
   }
 
   if (value.kind != CONF_VAL_STR) {
-    log_debug("Key '%s' expected to be str but was %s", key, config_value_kind_as_str(value.kind));
+    log_debug("Key '%s' expected to be str but was %s", key,
+              config_value_kind_as_str(value.kind));
     return false;
   }
 
@@ -2835,8 +2888,8 @@ bool set_int_to_config(Config *config, const char *key, int value) {
     log_debug("Key '%s' wasn't set, making new key...", key);
 
     Config_value cvalue = {
-      .kind = CONF_VAL_INT,
-      .as.i = value,
+        .kind = CONF_VAL_INT,
+        .as.i = value,
     };
 
     shput(*config, key, cvalue);
@@ -2844,7 +2897,8 @@ bool set_int_to_config(Config *config, const char *key, int value) {
     return true;
   }
 
-  log_debug("Key '%s' found, changing from %d -> %d...", key, config_kv->value.as.i, value);
+  log_debug("Key '%s' found, changing from %d -> %d...", key,
+            config_kv->value.as.i, value);
 
   config_kv->value.kind = CONF_VAL_INT;
   config_kv->value.as.i = value;
@@ -2859,8 +2913,8 @@ bool set_float_to_config(Config *config, const char *key, float value) {
     log_debug("Key '%s' wasn't set, making new key...", key);
 
     Config_value cvalue = {
-      .kind = CONF_VAL_FLT,
-      .as.i = value,
+        .kind = CONF_VAL_FLT,
+        .as.f = value,
     };
 
     shput(*config, key, cvalue);
@@ -2868,7 +2922,8 @@ bool set_float_to_config(Config *config, const char *key, float value) {
     return true;
   }
 
-  log_debug("Key '%s' found, changing from %.2f -> %.2f...", key, config_kv->value.as.f, value);
+  log_debug("Key '%s' found, changing from %.2f -> %.2f...", key,
+            config_kv->value.as.f, value);
 
   config_kv->value.kind = CONF_VAL_FLT;
   config_kv->value.as.f = value;
@@ -2883,8 +2938,8 @@ bool set_char_to_config(Config *config, const char *key, char value) {
     log_debug("Key '%s' wasn't set, making new key...", key);
 
     Config_value cvalue = {
-      .kind = CONF_VAL_CHR,
-      .as.i = value,
+        .kind = CONF_VAL_CHR,
+        .as.ch = value,
     };
 
     shput(*config, key, cvalue);
@@ -2892,7 +2947,8 @@ bool set_char_to_config(Config *config, const char *key, char value) {
     return true;
   }
 
-  log_debug("Key '%s' found, changing from %c -> %c...", key, config_kv->value.as.ch, value);
+  log_debug("Key '%s' found, changing from %c -> %c...", key,
+            config_kv->value.as.ch, value);
 
   config_kv->value.kind = CONF_VAL_CHR;
   config_kv->value.as.ch = value;
@@ -2907,8 +2963,8 @@ bool set_str_to_config(Config *config, const char *key, const char *value) {
     log_debug("Key '%s' wasn't set, making new key...", key);
 
     Config_value cvalue = {
-      .kind = CONF_VAL_STR,
-      .as.str = value,
+        .kind = CONF_VAL_STR,
+        .as.str = value,
     };
 
     shput(*config, key, cvalue);
@@ -2916,7 +2972,8 @@ bool set_str_to_config(Config *config, const char *key, const char *value) {
     return true;
   }
 
-  log_debug("Key '%s' found, changing from %s -> %s...", key, config_kv->value.as.str, value);
+  log_debug("Key '%s' found, changing from %s -> %s...", key,
+            config_kv->value.as.str, value);
 
   config_kv->value.kind = CONF_VAL_STR;
   config_kv->value.as.str = value;
