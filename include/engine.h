@@ -12,7 +12,7 @@
 #define COMMONLIB_REMOVE_PREFIX
 #include "commonlib.h"
 
-// #define ENGINE_IMPLEMENTATION
+#define ENGINE_IMPLEMENTATION
 
 // Pre-defined shaders
 
@@ -524,6 +524,11 @@ bool get_int_from_config(Config *config, const char *key, int *value_out);
 bool get_float_from_config(Config *config, const char *key, float *value_out);
 bool get_char_from_config(Config *config, const char *key, char *value_out);
 bool get_str_from_config(Config *config, const char *key, const char **value_out);
+
+bool set_int_to_config(Config *config, const char *key, int value);
+bool set_float_to_config(Config *config, const char *key, float value);
+bool set_char_to_config(Config *config, const char *key, char value);
+bool set_str_to_config(Config *config, const char *key, const char *value);
 
 // NOTE: Assets Manager
 typedef struct {
@@ -2822,6 +2827,34 @@ bool get_str_from_config(Config *config, const char *key, const char **value_out
 
   return true;
 }
+
+bool set_int_to_config(Config *config, const char *key, int value) {
+  Config_KV *config_kv = (Config_KV *)shgetp_null(*config, key);
+
+  if (config_kv == NULL) {
+    log_debug("Key '%s' wasn't set, making new key...", key);
+
+    Config_value cvalue = {
+      .kind = CONF_VAL_FLT,
+      .as.i = value,
+    };
+
+    shput(*config, key, cvalue);
+
+    return true;
+  }
+
+  log_debug("Key '%s' found, changing from %d -> %d...", key, config_kv->value.as.i, value);
+
+  config_kv->value.kind = CONF_VAL_INT;
+  config_kv->value.as.i = value;
+
+  return true;
+}
+
+bool set_float_to_config(Config *config, const char *key, float value) {}
+bool set_char_to_config(Config *config, const char *key, char value) {}
+bool set_str_to_config(Config *config, const char *key, const char *value) {}
 
 bool input_to_buff_ignored(char *buff, size_t buff_cap, int *cursor,
                            char ignore, bool *ignoring) {

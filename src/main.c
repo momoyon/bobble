@@ -26,30 +26,62 @@ int main(void) {
   //   log_debug("Key %s: %s", key, config_value_as_str(&str_arena, value));
   // }
 
-  int foo = -1;
-  if (!get_int_from_config(&config, "foo", &foo)) {
-    return 1;
-  }
-  log_debug("'foo' is: %d", foo);
+  {
+    int foo = -1;
+    if (!get_int_from_config(&config, "foo", &foo)) {
+      return 1;
+    }
+    log_debug("'foo' is: %d", foo);
 
-  float bar = 0.f;
-  if (!get_float_from_config(&config, "bar", &bar)) {
-    return 1;
-  }
-  log_debug("'bar' is: %.2f", bar);
+    float bar = 0.f;
+    if (!get_float_from_config(&config, "bar", &bar)) {
+      return 1;
+    }
+    log_debug("'bar' is: %.2f", bar);
 
-  char baz = 'C';
-  if (!get_char_from_config(&config, "baz", &baz)) {
-    return 1;
-  }
-  log_debug("'baz' is: %c", baz);
+    char baz = 'C';
+    if (!get_char_from_config(&config, "baz", &baz)) {
+      return 1;
+    }
+    log_debug("'baz' is: %c", baz);
 
-  const char *alice = "Broda";
-  if (!get_str_from_config(&config, "alice", &alice)) {
-    return 1;
+    const char *alice = "Broda";
+    if (!get_str_from_config(&config, "alice", &alice)) {
+      return 1;
+    }
+    log_debug("'alice' is: %s", alice);
   }
-  log_debug("'alice' is: %s", alice);
-  
+
+  log_debug("======== SETTING ==============================");
+  set_int_to_config(&config, "foo", 49);
+
+  log_debug("== AFTER SETTING ==============================");
+  {
+    int foo = -1;
+    if (!get_int_from_config(&config, "foo", &foo)) {
+      return 1;
+    }
+    log_debug("'foo' is: %d", foo);
+
+    float bar = 0.f;
+    if (!get_float_from_config(&config, "bar", &bar)) {
+      return 1;
+    }
+    log_debug("'bar' is: %.2f", bar);
+
+    char baz = 'C';
+    if (!get_char_from_config(&config, "baz", &baz)) {
+      return 1;
+    }
+    log_debug("'baz' is: %c", baz);
+
+    const char *alice = "Broda";
+    if (!get_str_from_config(&config, "alice", &alice)) {
+      return 1;
+    }
+    log_debug("'alice' is: %s", alice);
+  }
+
   arena_free(&str_arena);
   return 0;
 
