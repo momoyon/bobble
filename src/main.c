@@ -28,17 +28,27 @@ int main(void) {
 
   int foo = -1;
   if (!get_int_from_config(&config, "foo", &foo)) {
-    log_error("Failed to get 'foo' (int)");
     return 1;
   }
   log_debug("'foo' is: %d", foo);
 
   float bar = 0.f;
   if (!get_float_from_config(&config, "bar", &bar)) {
-    log_error("Failed to get 'bar' (float)");
     return 1;
   }
   log_debug("'bar' is: %.2f", bar);
+
+  char baz = 'C';
+  if (!get_char_from_config(&config, "baz", &baz)) {
+    return 1;
+  }
+  log_debug("'baz' is: %c", baz);
+
+  const char *alice = "Broda";
+  if (!get_str_from_config(&config, "alice", &alice)) {
+    return 1;
+  }
+  log_debug("'alice' is: %s", alice);
   
   arena_free(&str_arena);
   return 0;

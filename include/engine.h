@@ -522,6 +522,8 @@ bool get_value_from_config(Config *config, const char *key,
                            Config_value *value_out);
 bool get_int_from_config(Config *config, const char *key, int *value_out);
 bool get_float_from_config(Config *config, const char *key, float *value_out);
+bool get_char_from_config(Config *config, const char *key, char *value_out);
+bool get_str_from_config(Config *config, const char *key, const char **value_out);
 
 // NOTE: Assets Manager
 typedef struct {
@@ -2783,6 +2785,40 @@ bool get_float_from_config(Config *config, const char *key, float *value_out) {
   }
 
   *value_out = value.as.f;
+
+  return true;
+}
+
+bool get_char_from_config(Config *config, const char *key, char *value_out) {
+  Config_value value = {.err_msg = "get_int_from_config::Invalid"};
+  if (!get_value_from_config(config, key, &value)) {
+    log_debug("Failed to get key '%s'", key);
+    return false;
+  }
+
+  if (value.kind != CONF_VAL_CHR) {
+    log_debug("Key '%s' expected to be char but was %s", key, config_value_kind_as_str(value.kind));
+    return false;
+  }
+
+  *value_out = value.as.ch;
+
+  return true;
+}
+
+bool get_str_from_config(Config *config, const char *key, const char **value_out) {
+  Config_value value = {.err_msg = "get_int_from_config::Invalid"};
+  if (!get_value_from_config(config, key, &value)) {
+    log_debug("Failed to get key '%s'", key);
+    return false;
+  }
+
+  if (value.kind != CONF_VAL_STR) {
+    log_debug("Key '%s' expected to be str but was %s", key, config_value_kind_as_str(value.kind));
+    return false;
+  }
+
+  *value_out = value.as.str;
 
   return true;
 }
