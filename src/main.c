@@ -32,6 +32,13 @@ int main(void) {
     return 1;
   }
   log_debug("'foo' is: %d", foo);
+
+  float bar = 0.f;
+  if (!get_float_from_config(&config, "bar", &bar)) {
+    log_error("Failed to get 'bar' (float)");
+    return 1;
+  }
+  log_debug("'bar' is: %.2f", bar);
   
   arena_free(&str_arena);
   return 0;
