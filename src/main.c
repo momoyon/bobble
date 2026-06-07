@@ -52,13 +52,14 @@ int main(void) {
     }
     log_debug("'alice' is: %s", alice);
   }
-  log_debug("keyvalues count: %d", shlen(config));
+  log_debug("keyvalues count: %d", (int)shlen(config));
 
   log_debug("======== SETTING ==============================");
   set_int_to_config(&config, "foo", 49);
   set_float_to_config(&config, "bar", 4.0134);
   set_float_to_config(&config, "new_float", 4.0134);
   set_char_to_config(&config, "baz", 'Z');
+  set_str_to_config(&config, "alice", "This is not that long a string(lie)");
 
   log_debug("== AFTER SETTING ==============================");
   {
@@ -86,7 +87,7 @@ int main(void) {
     }
     log_debug("'alice' is: %s", alice);
   }
-  log_debug("keyvalues count: %d", shlen(config));
+  log_debug("keyvalues count: %d", (int)shlen(config));
 
   arena_free(&str_arena);
   return 0;
