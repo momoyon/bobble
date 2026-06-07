@@ -73,36 +73,65 @@ bool rmrf(const char *path) {
   return nftw(path, unlink_cb, 64, FTW_DEPTH | FTW_PHYS) == 0;
 }
 #else
+#define WIN32_LEAN_AND_MEAN
 #include <windows.h>
+#include <stdbool.h>
 
+static bool path_combine(char *dest, const char *dir, const char *file) {
+    size_t dirlen = strlen(dir);
+    size_t filelen = strlen(file);
+    // +1 for '\', +1 for '\0'
+    if (dirlen + 1 + filelen + 1 > MAX_PATH)
+        return false;
+    memcpy(dest, dir, dirlen);
+    dest[dirlen] = '\\';
+    memcpy(dest + dirlen + 1, file, filelen + 1); // +1 copies '\0'
+    return true;
+}
 bool rmrf(const char *path) {
+    if (!path || strlen(path) == 0)
+        return false;
+
     WIN32_FIND_DATAA data;
-    HANDLE find;
     char pattern[MAX_PATH];
-    
-    snprintf(pattern, MAX_PATH, "%s\\*", path);
-    find = FindFirstFileA(pattern, &data);
-    if (find == INVALID_HANDLE_VALUE) {
-        RemoveDirectoryA(path);
-        return true;
-    }
-    
+
+    if (!path_combine(pattern, path, "*"))
+        return false;
+
+    HANDLE find = FindFirstFileA(pattern, &data);
+    if (find == INVALID_HANDLE_VALUE)
+        return RemoveDirectoryA(path) != 0;
+
+    bool success = true;
     do {
         if (strcmp(data.cFileName, ".") == 0 || strcmp(data.cFileName, "..") == 0)
             continue;
-        
+
         char filepath[MAX_PATH];
-        snprintf(filepath, MAX_PATH, "%s\\%s", path, data.cFileName);
-        
-        if (data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-            rmrf(filepath);  // recurse
-        else
-            DeleteFileA(filepath);
+        if (!path_combine(filepath, path, data.cFileName)) {
+            success = false;
+            continue;
+        }
+
+        if (data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
+            if (!rmrf(filepath))
+                success = false;
+        } else {
+            if (data.dwFileAttributes & FILE_ATTRIBUTE_READONLY) {
+                DWORD attrs = data.dwFileAttributes & ~FILE_ATTRIBUTE_READONLY;
+                SetFileAttributesA(filepath, attrs);
+            }
+            if (!DeleteFileA(filepath))
+                success = false;
+        }
     } while (FindNextFileA(find, &data));
-    
+
     FindClose(find);
-    RemoveDirectoryA(path);
-    return true;
+
+    if (!RemoveDirectoryA(path))
+        success = false;
+
+    return success;
 }
 
 #endif /* ifdef  __linux__ */
