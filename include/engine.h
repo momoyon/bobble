@@ -12,7 +12,7 @@
 #define COMMONLIB_REMOVE_PREFIX
 #include "commonlib.h"
 
-#define ENGINE_IMPLEMENTATION
+// #define ENGINE_IMPLEMENTATION
 
 // Pre-defined shaders
 
@@ -2835,7 +2835,7 @@ bool set_int_to_config(Config *config, const char *key, int value) {
     log_debug("Key '%s' wasn't set, making new key...", key);
 
     Config_value cvalue = {
-      .kind = CONF_VAL_FLT,
+      .kind = CONF_VAL_INT,
       .as.i = value,
     };
 
@@ -2852,7 +2852,29 @@ bool set_int_to_config(Config *config, const char *key, int value) {
   return true;
 }
 
-bool set_float_to_config(Config *config, const char *key, float value) {}
+bool set_float_to_config(Config *config, const char *key, float value) {
+  Config_KV *config_kv = (Config_KV *)shgetp_null(*config, key);
+
+  if (config_kv == NULL) {
+    log_debug("Key '%s' wasn't set, making new key...", key);
+
+    Config_value cvalue = {
+      .kind = CONF_VAL_FLT,
+      .as.i = value,
+    };
+
+    shput(*config, key, cvalue);
+
+    return true;
+  }
+
+  log_debug("Key '%s' found, changing from %.2f -> %.2f...", key, config_kv->value.as.f, value);
+
+  config_kv->value.kind = CONF_VAL_FLT;
+  config_kv->value.as.f = value;
+
+  return true;
+}
 bool set_char_to_config(Config *config, const char *key, char value) {}
 bool set_str_to_config(Config *config, const char *key, const char *value) {}
 

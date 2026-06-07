@@ -54,6 +54,8 @@ int main(void) {
 
   log_debug("======== SETTING ==============================");
   set_int_to_config(&config, "foo", 49);
+  set_float_to_config(&config, "bar", 4.0134);
+  set_float_to_config(&config, "new_float", 4.0134);
 
   log_debug("== AFTER SETTING ==============================");
   {
