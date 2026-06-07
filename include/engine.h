@@ -2875,7 +2875,30 @@ bool set_float_to_config(Config *config, const char *key, float value) {
 
   return true;
 }
-bool set_char_to_config(Config *config, const char *key, char value) {}
+
+bool set_char_to_config(Config *config, const char *key, char value) {
+  Config_KV *config_kv = (Config_KV *)shgetp_null(*config, key);
+
+  if (config_kv == NULL) {
+    log_debug("Key '%s' wasn't set, making new key...", key);
+
+    Config_value cvalue = {
+      .kind = CONF_VAL_CHR,
+      .as.i = value,
+    };
+
+    shput(*config, key, cvalue);
+
+    return true;
+  }
+
+  log_debug("Key '%s' found, changing from %c -> %c...", key, config_kv->value.as.ch, value);
+
+  config_kv->value.kind = CONF_VAL_CHR;
+  config_kv->value.as.ch = value;
+
+  return true;
+}
 bool set_str_to_config(Config *config, const char *key, const char *value) {}
 
 bool input_to_buff_ignored(char *buff, size_t buff_cap, int *cursor,

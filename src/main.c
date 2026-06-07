@@ -26,6 +26,7 @@ int main(void) {
   //   log_debug("Key %s: %s", key, config_value_as_str(&str_arena, value));
   // }
 
+  log_debug("== BEFORE SETTING ==============================");
   {
     int foo = -1;
     if (!get_int_from_config(&config, "foo", &foo)) {
@@ -51,11 +52,13 @@ int main(void) {
     }
     log_debug("'alice' is: %s", alice);
   }
+  log_debug("keyvalues count: %d", shlen(config));
 
   log_debug("======== SETTING ==============================");
   set_int_to_config(&config, "foo", 49);
   set_float_to_config(&config, "bar", 4.0134);
   set_float_to_config(&config, "new_float", 4.0134);
+  set_char_to_config(&config, "baz", 'Z');
 
   log_debug("== AFTER SETTING ==============================");
   {
@@ -83,6 +86,7 @@ int main(void) {
     }
     log_debug("'alice' is: %s", alice);
   }
+  log_debug("keyvalues count: %d", shlen(config));
 
   arena_free(&str_arena);
   return 0;
