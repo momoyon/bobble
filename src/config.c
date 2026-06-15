@@ -36,9 +36,9 @@ bool g_debug = true;
 bool g_debug = false;
 #endif
 
-const char *g_debug_commands[] = {
+const char *g_console_commands[] = {
   "exit",
   "elephant",
   "exciting"
 };
-size_t g_debug_commands_count = ARRAY_LEN(g_debug_commands);
+size_t g_console_commands_count = ARRAY_LEN(g_console_commands);

@@ -1,6 +1,8 @@
 #include <console_command.h>
 #include <config.h>
 
+// TODO: The way we match the commands is kinda wacky rn. 
+// If i change the g_console_commands[] in config.c, i have to mind to match that change to here...
 void dispatch_console_command(size_t cmd_id, String_array args) {
     log_debug("Dispatched console command %zu with args: ", cmd_id);
     for (int i = 0; i < args.count; ++i) {

@@ -26,8 +26,8 @@ extern int g_font_size;
 extern bool g_update_paused;
 
 extern bool g_debug;
-extern const char *g_debug_commands[];
-extern size_t g_debug_commands_count;
+extern const char *g_console_commands[];
+extern size_t g_console_commands_count;
 
 #define TARGET_FPS 60
 #define BOB_DEFAULT_SPEED 500.f

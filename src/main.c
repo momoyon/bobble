@@ -133,12 +133,12 @@ int main(void) {
       if (input_to_console(&debug_console, "", 0)) {
         char *input = get_current_console_line_buff(&debug_console);
         add_line_to_console_simple(&debug_console, input, WHITE, true);
-        Ids matched_cmd_ids = match_command(input, g_debug_commands, g_debug_commands_count);
+        Ids matched_cmd_ids = match_command(input, g_console_commands, g_console_commands_count);
 
         if (matched_cmd_ids.count > 1) {
           for (int i = 0; i < matched_cmd_ids.count; ++i) {
             int matched_cmd_id = matched_cmd_ids.items[i];
-            const char *potential_matched_cmd = g_debug_commands[matched_cmd_id];
+            const char *potential_matched_cmd = g_console_commands[matched_cmd_id];
             log_info_console_color(debug_console, GRAY, " - %s", potential_matched_cmd);
           }
         } else if (matched_cmd_ids.count == 1) {
