@@ -488,6 +488,7 @@ struct Config_value {
   Config_value_kind kind;
   const char *varname; // Only values of variables have this set (obviously)
   const char *err_msg;
+  void *value_ptr;
 };
 
 typedef struct Config_KV Config_KV;
@@ -531,6 +532,7 @@ bool set_int_to_config(Config *config, const char *key, int value);
 bool set_float_to_config(Config *config, const char *key, float value);
 bool set_char_to_config(Config *config, const char *key, char value);
 bool set_str_to_config(Config *config, const char *key, const char *value);
+bool set_value_to_config(Config *config, const char *key, Config_value value);
 
 // NOTE: Assets Manager
 typedef struct {
@@ -666,7 +668,7 @@ Ids match_command(const char *command, const char **commands,
         .color = clr,                                                          \
     };                                                                         \
     snprintf(l.buff, CONSOLE_LINE_BUFF_CAP, "[INFO] " fmt, __VA_ARGS__);       \
-    darr_append(console.lines, l);                                             \
+    darr_append((console).lines, l);                                           \
   } while (0)
 
 #define log_info_console(console, fmt, ...)                                    \
@@ -678,7 +680,7 @@ Ids match_command(const char *command, const char **commands,
         .color = YELLOW,                                                       \
     };                                                                         \
     snprintf(l.buff, CONSOLE_LINE_BUFF_CAP, "[WARNING] " fmt, __VA_ARGS__);    \
-    darr_append(console.lines, l);                                             \
+    darr_append((console).lines, l);                                           \
   } while (0)
 
 #define log_error_console(console, fmt, ...)                                   \
@@ -687,7 +689,7 @@ Ids match_command(const char *command, const char **commands,
         .color = RED,                                                          \
     };                                                                         \
     snprintf(l.buff, CONSOLE_LINE_BUFF_CAP, "[ERROR] " fmt, ##__VA_ARGS__);    \
-    darr_append(console.lines, l);                                             \
+    darr_append((console).lines, l);                                           \
   } while (0)
 
 #ifdef DEBUG
@@ -697,7 +699,7 @@ Ids match_command(const char *command, const char **commands,
         .color = YELLOW,                                                       \
     };                                                                         \
     snprintf(l.buff, CONSOLE_LINE_BUFF_CAP, "[DEBUG] " fmt, __VA_ARGS__);      \
-    darr_append(console.lines, l);                                             \
+    darr_append((console).lines, l);                                           \
   } while (0)
 #else
 #define log_debug_console(...)
@@ -2638,6 +2640,15 @@ Config_value config_value_from_sv(String_view sv, Config *config) {
     // log_debug("Config currently has %d variables declared, trying to find var
     // '%s'", (int)shlen(config), varname);
     Config_KV *varvalue = (Config_KV *)shgetp_null(*config, varname);
+
+    c_Arena str_arena =
+        arena_make(0); // TODO: Should this be passed as an argument?
+
+    if (varvalue == NULL) {
+      res.err_msg =
+          arena_alloc_str(str_arena, "Variable '%s' is not declared!", varname);
+      return res;
+    }
     varvalue->value.varname = varname;
 
     if (varvalue == NULL) {
@@ -2645,8 +2656,6 @@ Config_value config_value_from_sv(String_view sv, Config *config) {
       return res;
     }
 
-    c_Arena str_arena =
-        arena_make(0); // TODO: Should this be passed as an argument?
     // log_debug("Var '%s': %s", varname, config_value_as_str(&str_arena,
     // varvalue->value));
 
@@ -2826,6 +2835,10 @@ bool get_int_from_config(Config *config, const char *key, int *value_out) {
   }
 
   *value_out = value.as.i;
+  // TODO: We are already doing a lookup above in `get_value_from_config()`
+  Config_KV *kv = shgetp_null(*config, key);
+  ASSERT(kv, "We already checked if the key exists above");
+  kv->value.value_ptr = (void *)value_out;
 
   return true;
 }
@@ -2844,6 +2857,10 @@ bool get_float_from_config(Config *config, const char *key, float *value_out) {
   }
 
   *value_out = value.as.f;
+  // TODO: We are already doing a lookup above in `get_value_from_config()`
+  Config_KV *kv = shgetp_null(*config, key);
+  ASSERT(kv, "We already checked if the key exists above");
+  kv->value.value_ptr = (void *)value_out;
 
   return true;
 }
@@ -2862,6 +2879,10 @@ bool get_char_from_config(Config *config, const char *key, char *value_out) {
   }
 
   *value_out = value.as.ch;
+  // TODO: We are already doing a lookup above in `get_value_from_config()`
+  Config_KV *kv = shgetp_null(*config, key);
+  ASSERT(kv, "We already checked if the key exists above");
+  kv->value.value_ptr = (void *)value_out;
 
   return true;
 }
@@ -2881,6 +2902,10 @@ bool get_str_from_config(Config *config, const char *key,
   }
 
   *value_out = value.as.str;
+  // TODO: We are already doing a lookup above in `get_value_from_config()`
+  Config_KV *kv = shgetp_null(*config, key);
+  ASSERT(kv, "We already checked if the key exists above");
+  kv->value.value_ptr = (void *)value_out;
 
   return true;
 }
@@ -2907,6 +2932,10 @@ bool set_int_to_config(Config *config, const char *key, int value) {
   config_kv->value.kind = CONF_VAL_INT;
   config_kv->value.as.i = value;
 
+  if (config_kv->value.value_ptr) {
+    *((int *)(config_kv->value.value_ptr)) = value;
+  }
+
   return true;
 }
 
@@ -2932,6 +2961,10 @@ bool set_float_to_config(Config *config, const char *key, float value) {
   config_kv->value.kind = CONF_VAL_FLT;
   config_kv->value.as.f = value;
 
+  if (config_kv->value.value_ptr) {
+    *((float *)(config_kv->value.value_ptr)) = value;
+  }
+
   return true;
 }
 
@@ -2956,6 +2989,9 @@ bool set_char_to_config(Config *config, const char *key, char value) {
 
   config_kv->value.kind = CONF_VAL_CHR;
   config_kv->value.as.ch = value;
+  if (config_kv->value.value_ptr) {
+    *((char *)(config_kv->value.value_ptr)) = value;
+  }
 
   return true;
 }
@@ -2981,8 +3017,30 @@ bool set_str_to_config(Config *config, const char *key, const char *value) {
 
   config_kv->value.kind = CONF_VAL_STR;
   config_kv->value.as.str = value;
+  if (config_kv->value.value_ptr) {
+    *((const char **)(config_kv->value.value_ptr)) = value;
+  }
 
   return true;
+}
+
+bool set_value_to_config(Config *config, const char *key, Config_value value) {
+  switch (value.kind) {
+  case CONF_VAL_INT:
+    return set_int_to_config(config, key, value.as.i);
+  case CONF_VAL_FLT:
+    return set_float_to_config(config, key, value.as.f);
+  case CONF_VAL_CHR:
+    return set_char_to_config(config, key, value.as.ch);
+  case CONF_VAL_STR:
+    return set_str_to_config(config, key, value.as.str);
+  case CONF_VAL_VAR:
+    ASSERT(false, "Honestly don't know what to do here yet.");
+  case CONF_VAL_COUNT:
+  default:
+    ASSERT(false, "UNREACHABLE");
+  }
+  return false;
 }
 
 bool input_to_buff_ignored(char *buff, size_t buff_cap, int *cursor,
