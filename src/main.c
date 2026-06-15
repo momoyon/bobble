@@ -3,6 +3,7 @@
 #include <ball.h>
 #include <config.h>
 #include <packed.h>
+#include <console_command.h>
 
 #define ENGINE_IMPLEMENTATION
 #include "engine.h"
@@ -13,91 +14,14 @@
 
 int main(void) {
   Config config = {0};
-
-  read_config(&config, "newconfig.momo");
-
-  Arena str_arena = arena_make(0);
-
-  // int keyvalue_count = (int)shlen(config);
-  // log_debug("Config has %d keyvalues", keyvalue_count);
-  // for (int i = 0; i < shlen(config); ++i) {
-  //   const char *key = config[i].key;
-  //   Config_value value = config[i].value;
-  //   log_debug("Key %s: %s", key, config_value_as_str(&str_arena, value));
-  // }
-
-  log_debug("== BEFORE SETTING ==============================");
-  {
-    int foo = -1;
-    if (!get_int_from_config(&config, "foo", &foo)) {
-      return 1;
-    }
-    log_debug("'foo' is: %d", foo);
-
-    float bar = 0.f;
-    if (!get_float_from_config(&config, "bar", &bar)) {
-      return 1;
-    }
-    log_debug("'bar' is: %.2f", bar);
-
-    char baz = 'C';
-    if (!get_char_from_config(&config, "baz", &baz)) {
-      return 1;
-    }
-    log_debug("'baz' is: %c", baz);
-
-    const char *alice = "Broda";
-    if (!get_str_from_config(&config, "alice", &alice)) {
-      return 1;
-    }
-    log_debug("'alice' is: %s", alice);
+  if (!read_config(&config, "config.momo")) {
+    return 1;
   }
-  log_debug("keyvalues count: %d", (int)shlen(config));
-
-  log_debug("======== SETTING ==============================");
-  set_int_to_config(&config, "foo", 49);
-  set_float_to_config(&config, "bar", 4.0134);
-  set_char_to_config(&config, "baz", 'Z');
-  set_str_to_config(&config, "alice", "This is not that long a string(lie)");
-
-  set_int_to_config(&config, "new_int", 1337);
-  set_float_to_config(&config, "new_float", 9.3432);
-  set_char_to_config(&config, "new_char", '-');
-  set_str_to_config(&config, "new_string", "Hi lol");
-
-  log_debug("== AFTER SETTING ==============================");
-  {
-    int foo = -1;
-    if (!get_int_from_config(&config, "foo", &foo)) {
-      return 1;
-    }
-    log_debug("'foo' is: %d", foo);
-
-    float bar = 0.f;
-    if (!get_float_from_config(&config, "bar", &bar)) {
-      return 1;
-    }
-    log_debug("'bar' is: %.2f", bar);
-
-    char baz = 'C';
-    if (!get_char_from_config(&config, "baz", &baz)) {
-      return 1;
-    }
-    log_debug("'baz' is: %c", baz);
-
-    const char *alice = "Broda";
-    if (!get_str_from_config(&config, "alice", &alice)) {
-      return 1;
-    }
-    log_debug("'alice' is: %s", alice);
-  }
-  log_debug("keyvalues count: %d", (int)shlen(config));
-
-
-  if (!write_config(&config, "newconfig.momo")) return 1;
-
-  arena_free(&str_arena);
-  return 0;
+  ASSERT(get_int_from_config(&config, "screen_width", &g_screen_width), ".");
+  ASSERT(get_int_from_config(&config, "screen_height", &g_screen_height), ".");
+  ASSERT(get_float_from_config(&config, "screen_scale", &g_screen_scale), ".");
+  ASSERT(get_float_from_config(&config, "gravity", &g_gravity), ".");
+  ASSERT(get_int_from_config(&config, "font_size", &g_font_size), ".");
 
   int w, h;
   if (!init_window(g_screen_width, g_screen_height, g_screen_scale, "Bobble",
@@ -109,6 +33,14 @@ int main(void) {
   h = g_window_height;
 
   g_font = GetFontDefault();
+
+  Console debug_console = make_console(
+      CONSOLE_FLAG_READLINE_USES_UNPREFIXED_LINES, g_font, g_font_size * 2);
+  float debug_console_y_off = debug_console.font_size;
+  float debug_console_y = 0.f;
+  float debug_console_height = g_window_height * 0.5f;
+  float debug_console_target_y = -debug_console_height - debug_console_y_off;
+  bool debug_console_active = false;
 
   // Textures init
   Texture2D overlay_tex = {0};
@@ -169,7 +101,7 @@ int main(void) {
   /// DEBUG UI
   UI ui = UI_make(get_default_ui_theme(), &g_font, v2xx(10), "DEBUG", &g_mpos);
 
-  while (!WindowShouldClose()) {
+  while (!WindowShouldClose() && !g_force_quit) {
     g_delta = GetFrameTime();
     g_mpos = get_mpos_scaled();
     begin_frame();
@@ -177,21 +109,63 @@ int main(void) {
     /// UI
     UI_begin(&ui, UI_LAYOUT_KIND_VERT);
     UI_text(&ui, TextFormat("Bob.joystick_rotation: %f", bob.joystick_rotation),
-            16, WHITE);
+            g_font_size, WHITE);
     UI_text(&ui,
             TextFormat("Bob.joystick_rotation_target: %f",
                        bob.joystick_rotation_target),
-            16, WHITE);
+            g_font_size, WHITE);
 
     /// Input
     if (IsKeyDown(KEY_LEFT_CONTROL) && IsKeyPressed(KEY_F)) {
       ToggleFullscreen();
     }
     control_bob(&bob, g_delta);
+    if (IsKeyPressed(KEY_F2)) {
+      debug_console_active = !debug_console_active;
+      if (debug_console_active) {
+        debug_console_target_y = 0.f;
+      } else {
+        debug_console_target_y = -debug_console_height - debug_console_y_off;
+      }
+      g_update_paused = debug_console_active;
+    }
+    if (debug_console_active) {
+      if (input_to_console(&debug_console, "", 0)) {
+        char *input = get_current_console_line_buff(&debug_console);
+        add_line_to_console_simple(&debug_console, input, WHITE, true);
+        Ids matched_cmd_ids = match_command(input, g_debug_commands, g_debug_commands_count);
+
+        if (matched_cmd_ids.count > 1) {
+          for (int i = 0; i < matched_cmd_ids.count; ++i) {
+            int matched_cmd_id = matched_cmd_ids.items[i];
+            const char *potential_matched_cmd = g_debug_commands[matched_cmd_id];
+            log_info_console_color(debug_console, GRAY, " - %s", potential_matched_cmd);
+          }
+        } else if (matched_cmd_ids.count == 1) {
+          log_info_console_color(debug_console, YELLOW, "Valid Command '%s'", input);
+          String_array args = get_current_console_args(&debug_console);
+          dispatch_console_command(matched_cmd_ids.items[0], args);
+          for (int i = 0; i < args.count; ++i) {
+            free((void *)args.items[i]);
+          }
+          darr_free(args);
+        } else {
+          log_error_console(debug_console, "Invalid Command '%s'", input);
+        }
+
+        darr_free(matched_cmd_ids);
+        clear_current_console_line(&debug_console);
+      }
+    }
+
     /// Update
     bound_bob_to_bounds(&bob, g_play_bounds);
-    update_bob(&bob, g_delta);
-    update_ball(&b, g_delta);
+    if (!g_update_paused) {
+      update_bob(&bob, g_delta);
+      update_ball(&b, g_delta);
+    }
+    debug_console_y +=
+        (debug_console_target_y - debug_console_y) * g_delta * 10.f;
 
     /// Draw
     ClearBackground(GetColor(0x181818FF));
@@ -206,6 +180,17 @@ int main(void) {
     if (g_debug) {
       DrawRectangleLinesEx(g_play_bounds, 1.f, WHITE);
       UI_draw(&ui);
+
+      Rectangle r = {
+          .x = 0,
+          .y = debug_console_y,
+          .width = g_window_width,
+          .height = g_window_height * 0.5,
+      };
+      if (debug_console_active) {
+        DrawRectangle(0, 0, g_window_width, g_window_height, ColorAlpha(BLACK, 0.5));
+      }
+      draw_console(&debug_console, r, v2xx(2), GetColor(0x141414), WHITE, 1.0);
     }
 
     UI_end(&ui);

@@ -660,14 +660,17 @@ Ids match_command(const char *command, const char **commands,
                   size_t commands_count);
 
 // NOTE: Macros
-#define log_info_console(console, fmt, ...)                                    \
+#define log_info_console_color(console, clr, fmt, ...)                         \
   do {                                                                         \
     Console_line l = {                                                         \
-        .color = WHITE,                                                        \
+        .color = clr,                                                          \
     };                                                                         \
     snprintf(l.buff, CONSOLE_LINE_BUFF_CAP, "[INFO] " fmt, __VA_ARGS__);       \
     darr_append(console.lines, l);                                             \
   } while (0)
+
+#define log_info_console(console, fmt, ...)                                    \
+  log_info_console_color(console, WHITE, fmt, __VA_ARGS__)
 
 #define log_warning_console(console, fmt, ...)                                 \
   do {                                                                         \
@@ -2787,7 +2790,8 @@ bool write_config(Config *config, const char *config_filepath) {
     default:
       ASSERT(false, "UNREACHABLE!");
     }
-    if (i < keyvalues_count-1) fprintf(f, "\n");
+    if (i < keyvalues_count - 1)
+      fprintf(f, "\n");
   }
 
   fclose(f);

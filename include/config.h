@@ -12,6 +12,8 @@ extern int g_window_height;
 
 extern float g_screen_scale;
 
+extern bool g_force_quit;
+
 extern Asset_manager g_asset_manager;
 extern float g_delta;
 extern Vector2 g_mpos;
@@ -20,8 +22,12 @@ extern Rectangle g_play_bounds;
 extern float g_gravity;
 extern State g_state;
 extern Font g_font;
+extern int g_font_size;
+extern bool g_update_paused;
 
 extern bool g_debug;
+extern const char *g_debug_commands[];
+extern size_t g_debug_commands_count;
 
 #define TARGET_FPS 60
 #define BOB_DEFAULT_SPEED 500.f
