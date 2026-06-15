@@ -1,9 +1,11 @@
 #include "bob.h"
 #include "raylib.h"
+#include "segment.h"
 #include <ball.h>
 #include <config.h>
-#include <packed.h>
 #include <console_command.h>
+#include <leg.h>
+#include <packed.h>
 
 #define ENGINE_IMPLEMENTATION
 #include "engine.h"
@@ -13,22 +15,34 @@
 #include "commonlib.h"
 
 int main(void) {
-  Config config = {0};
-  if (!read_config(&config, "config.momo")) {
+  if (!read_config(&g_config, "config.momo")) {
     return 1;
   }
-  ASSERT(get_int_from_config(&config, "screen_width", &g_screen_width), ".");
-  ASSERT(get_int_from_config(&config, "screen_height", &g_screen_height), ".");
-  ASSERT(get_float_from_config(&config, "screen_scale", &g_screen_scale), ".");
-  ASSERT(get_float_from_config(&config, "gravity", &g_gravity), ".");
-  ASSERT(get_int_from_config(&config, "font_size", &g_font_size), ".");
+  ASSERT(get_int_from_config(&g_config, "screen_width", &g_screen_width), ".");
+  ASSERT(get_int_from_config(&g_config, "screen_height", &g_screen_height),
+         ".");
+  ASSERT(get_float_from_config(&g_config, "screen_scale", &g_screen_scale),
+         ".");
+  ASSERT(get_float_from_config(&g_config, "gravity", &g_gravity), ".");
+  ASSERT(get_int_from_config(&g_config, "font_size", &g_font_size), ".");
+  ASSERT(get_int_from_config(&g_config, "fabrik_iterations_in_one_frame",
+                             &g_fabrik_iterations_in_one_frame),
+         ".");
+  ASSERT(get_float_from_config(&g_config, "bob_default_speed",
+                               &g_bob_default_speed),
+         ".");
+  ASSERT(get_float_from_config(&g_config, "bob_default_radius",
+                               &g_bob_default_radius),
+         ".");
+  ASSERT(get_int_from_config(&g_config, "target_fps", &g_target_fps), ".");
 
   int w, h;
   if (!init_window(g_screen_width, g_screen_height, g_screen_scale, "Bobble",
                    &g_window_width, &g_window_height)) {
     return 1;
   }
-  SetTargetFPS(TARGET_FPS);
+  SetTargetFPS(g_target_fps);
+  SetExitKey(0);
   w = g_window_width;
   h = g_window_height;
 
@@ -88,11 +102,11 @@ int main(void) {
   };
   fire_button_spr.pos = v2(265, 579);
 
-  Bob bob = make_bob(
-      v2(w / 2.f, g_play_bounds.y + g_play_bounds.height - BOB_DEFAULT_RADIUS),
-      KEY_LEFT, KEY_RIGHT, KEY_Z, &joystick_spr, &fire_button_spr);
+  Bob bob =
+      make_bob(v2(w / 2.f, g_play_bounds.y + g_play_bounds.height - 100.f -
+                               g_bob_default_radius),
+               KEY_LEFT, KEY_RIGHT, KEY_Z, &joystick_spr, &fire_button_spr);
 
-  /// @TEMP
   Vector2 play_bounds_size = v2(g_play_bounds.width, g_play_bounds.height);
   Ball b = make_ball(v2_add(v2(g_play_bounds.x, g_play_bounds.y),
                             v2_scale(play_bounds_size, 0.5)),
@@ -115,6 +129,18 @@ int main(void) {
                        bob.joystick_rotation_target),
             g_font_size, WHITE);
 
+    UI_text(&ui,
+            TextFormat("Bob.left_leg.start: %.2f, %.2f",
+                       bob.left_leg.leg.start.x, bob.left_leg.leg.start.y),
+            g_font_size, WHITE);
+    UI_text(&ui,
+            TextFormat("Bob.right_leg.start: %.2f, %.2f",
+                       bob.right_leg.leg.start.x, bob.right_leg.leg.start.y),
+            g_font_size, WHITE);
+
+    UI_text(&ui, TextFormat("Mpos: %.2f, %.2f", g_mpos.x, g_mpos.y),
+            g_font_size, GOLD);
+
     /// Input
     if (IsKeyDown(KEY_LEFT_CONTROL) && IsKeyPressed(KEY_F)) {
       ToggleFullscreen();
@@ -133,22 +159,21 @@ int main(void) {
       if (input_to_console(&debug_console, "", 0)) {
         char *input = get_current_console_line_buff(&debug_console);
         add_line_to_console_simple(&debug_console, input, WHITE, true);
-        Ids matched_cmd_ids = match_command(input, g_console_commands, g_console_commands_count);
+        Ids matched_cmd_ids =
+            match_command(input, g_console_commands, g_console_commands_count);
 
         if (matched_cmd_ids.count > 1) {
           for (int i = 0; i < matched_cmd_ids.count; ++i) {
             int matched_cmd_id = matched_cmd_ids.items[i];
-            const char *potential_matched_cmd = g_console_commands[matched_cmd_id];
-            log_info_console_color(debug_console, GRAY, " - %s", potential_matched_cmd);
+            const char *potential_matched_cmd =
+                g_console_commands[matched_cmd_id];
+            log_info_console_color(debug_console, GRAY, " - %s",
+                                   potential_matched_cmd);
           }
         } else if (matched_cmd_ids.count == 1) {
-          log_info_console_color(debug_console, YELLOW, "Valid Command '%s'", input);
-          String_array args = get_current_console_args(&debug_console);
-          dispatch_console_command(matched_cmd_ids.items[0], args);
-          for (int i = 0; i < args.count; ++i) {
-            free((void *)args.items[i]);
-          }
-          darr_free(args);
+          log_info_console_color(debug_console, YELLOW, "Valid Command '%s'",
+                                 input);
+          dispatch_console_command(matched_cmd_ids.items[0], &debug_console);
         } else {
           log_error_console(debug_console, "Invalid Command '%s'", input);
         }
@@ -188,12 +213,15 @@ int main(void) {
           .height = g_window_height * 0.5,
       };
       if (debug_console_active) {
-        DrawRectangle(0, 0, g_window_width, g_window_height, ColorAlpha(BLACK, 0.5));
+        DrawRectangle(0, 0, g_window_width, g_window_height,
+                      ColorAlpha(BLACK, 0.5));
       }
       draw_console(&debug_console, r, v2xx(2), GetColor(0x141414), WHITE, 1.0);
     }
 
     UI_end(&ui);
+
+    DrawFPS(10, 10);
 
     end_frame();
   }

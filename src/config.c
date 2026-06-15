@@ -1,6 +1,8 @@
 #include "state.h"
 #include <config.h>
 
+Config g_config = {0};
+
 int g_screen_width = 0;
 int g_screen_height = 0;
 
@@ -8,6 +10,8 @@ int g_window_width = 0;
 int g_window_height = 0;
 
 float g_screen_scale = 0;
+
+int g_fabrik_iterations_in_one_frame = 0;
 
 bool g_force_quit = false;
 
@@ -38,7 +42,11 @@ bool g_debug = false;
 
 const char *g_console_commands[] = {
   "exit",
-  "elephant",
-  "exciting"
+  "setvar",
 };
 size_t g_console_commands_count = ARRAY_LEN(g_console_commands);
+
+
+float g_bob_default_speed = 500.f;
+float g_bob_default_radius = 32.f;
+int g_target_fps = 60;
